@@ -1,4 +1,4 @@
-﻿/*
+/*
  *
  * TextExport 1.3 - by Bramus! - http://www.bram.us/
  * text layer style export added by Max Glenister (@omgmog) http://www.omgmog.net
@@ -22,6 +22,10 @@
 	var useDialog	= true;
 	// Open file when done (true/false)? - This will be overriden to true when running TextExport on multiple files!
 	var openFile	= true;
+	// Output layer info (true/false)?
+	var exportLayerInfo	= confirm("Do you wish to export layer info?", true, "TextExport");
+	// Output font style (true/false)?
+	var exportFontStyle	= confirm("Do you wish to export font style?", true, "TextExport");
 	// text separator
 	var separator	= "*************************************";
  /**
@@ -126,8 +130,8 @@
 			{
 				// curentLayer ref
 				var currentLayer = layers[layerIndex-1];
-				// currentLayer is a LayerSet
-				if (currentLayer.typename == "LayerSet") {
+				// Layer is visible and currentLayer is a LayerSet
+				if ( (currentLayer.visible) && (currentLayer.typename == "LayerSet") ) {
 					goTextExport2(currentLayer, fileOut, path + currentLayer.name + '/');
 				// currentLayer is not a LayerSet
 				} else {
@@ -136,29 +140,43 @@
 					{
 						fileOut.writeln(separator);
 						fileOut.writeln('');
-						fileOut.writeln('LayerPath: ' + path);
-						fileOut.writeln('LayerName: ' + currentLayer.name);
-						fileOut.writeln('');
+						if (exportLayerInfo) {
+							fileOut.writeln('LayerPath: ' + path);
+							fileOut.writeln('LayerName: ' + currentLayer.name);
+							fileOut.writeln('');
+						}
 						fileOut.writeln('LayerContent:');
-						fileOut.writeln(currentLayer.textItem.contents);
+						fileOut.writeln( encodeHtmlEntities(currentLayer.textItem.contents) );
 						fileOut.writeln('');
 						// additional exports added by Max Glenister for font styles 
-						if(currentLayer.textItem.contents){
+						if(exportFontStyle && currentLayer.textItem.contents){
 							fileOut.writeln('LayerStyles:');
-							fileOut.writeln('* capitalization: '+(currentLayer.textItem.capitalization=="TextCase.NORMAL"?"normal":"uppercase"));
+							// fileOut.writeln('* capitalization: '+(currentLayer.textItem.capitalization=="TextCase.NORMAL"?"normal":"uppercase"));
 							fileOut.writeln('* color: #'+(currentLayer.textItem.color.rgb.hexValue?currentLayer.textItem.color.rgb.hexValue:''));
-							fileOut.writeln('* fauxBold: '+(currentLayer.textItem.fauxBold?currentLayer.textItem.fauxBold:''));
-							fileOut.writeln('* fauxItalic: '+(currentLayer.textItem.fauxItalic?currentLayer.textItem.fauxItalic:''));
+							// fileOut.writeln('* fauxBold: '+(currentLayer.textItem.fauxBold?currentLayer.textItem.fauxBold:''));
+							// fileOut.writeln('* fauxItalic: '+(currentLayer.textItem.fauxItalic?currentLayer.textItem.fauxItalic:''));
 							fileOut.writeln('* font: '+currentLayer.textItem.font);
 							//fileOut.writeln('leading: '+(currentLayer.textItem.leading=='auto-leading'?'auto':currentLayer.textItem.leading));
 							fileOut.writeln('* size: '+currentLayer.textItem.size);
-							fileOut.writeln('* tracking: '+(currentLayer.textItem.fauxItalic?currentLayer.textItem.fauxItalic:''));
+							// fileOut.writeln('* tracking: '+(currentLayer.textItem.fauxItalic?currentLayer.textItem.fauxItalic:''));
 							fileOut.writeln('');
 						}
 					}
 				}
 			}
 		}
+  	/**
+  	 * Encode text as HTML entities
+  	 * -------------------------------------------------------------
+	 */
+		function encodeHtmlEntities(text) 
+		{
+			return text.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
+				return '&#' + i.charCodeAt(0) + ';';
+			});
+			
+		}
+	
 	/**
 	 *  TextExport Boot her up
 	 * -------------------------------------------------------------
